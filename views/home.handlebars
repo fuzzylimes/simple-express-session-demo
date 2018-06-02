@@ -1,7 +1,11 @@
 <div class="container">
     <div class="row">
-        <div class="col">
+        <div class="col py-md-3">
+            {{#if loggedIn}}
+            <h2>Welcome to the Demo, {{user}}!</h2>
+            {{else}}
             <h2>Welcome to the Demo. Please sign in.</h2>
+            {{/if}}
         </div>
     </div>
 </div>

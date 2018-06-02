@@ -2,7 +2,14 @@ const express = require('express');
 const uuid = require('uuid/v4');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
-const exphbr = require('express-handlebars');
+const exphbs = require('express-handlebars');
+const bodyParser = require('body-parser');
+
+const app = express();
+
+// body-parser middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json());
 
 // Handlebars middleware
 app.engine('handlebars', exphbs({ defaultLayout: 'main' }));
@@ -23,8 +30,8 @@ app.use(session({
 // Constants
 const port = 5555;
 
-app.use((req, res, next) => {
-    if (req.session.user && (req.session.timeout > Date.now())) {
+var sessionCheck = ((req, res, next) => {
+    if (req.session.loggedIn) {
         next();
     } else {
         res.redirect('/login');
@@ -32,23 +39,27 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-    res.render('home');
+    res.render('home', { user: req.session.user, loggedIn: req.session.loggedIn });
 });
 
 app.get('/login', (req, res) => {
     res.render('login');
 });
 
-app.get('/logout', (req, res) => {
+app.post('/api/login', (req, res) => {
+    req.session.user = req.body.email;
+    req.session.loggedIn = true;
     res.redirect('/');
 });
 
-app.get('/dashboard', (req, res) => {
-    res.render('home');
+app.get('/logout', sessionCheck, (req, res) => {
+    req.session.loggedIn = false;
+    req.session.user = null;
+    res.redirect('/');
 });
 
-app.get('/about', (req, res) => {
-    res.render('about');
+app.get('/dashboard', sessionCheck, (req, res) => {
+    res.render('home', { user: req.session.user, loggedIn: req.session.loggedIn });
 });
 
 app.listen(port, () => {
